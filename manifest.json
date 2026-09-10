@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "austraz.weather",
+  "name": "Weather",
+  "version": "1.0.0",
+  "author": "austraz",
+  "description": "Weather pill with scale-aware optical icon alignment",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Weather",
+    "description": "Weather pill with scale-aware optical icon alignment",
+    "category": "Info",
+    "allowMultiple": false,
+    "settingsForm": "weatherSettings"
+  },
+  "omarchy": {
+    "clonedFrom": "omarchy.weather"
+  }
+}
