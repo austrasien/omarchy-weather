@@ -131,6 +131,30 @@ Panel {
   readonly property bool hasConfiguredCoordinates: !isNaN(parseFloat(String(configuredLocationState.latitude))) && !isNaN(parseFloat(String(configuredLocationState.longitude)))
   readonly property var openMeteoCurrent: Model.openMeteoCurrentCondition(dailyForecastReport)
   readonly property var current: (hasConfiguredCoordinates && openMeteoCurrent) ? openMeteoCurrent : ((report && report.current_condition && report.current_condition[0]) ? report.current_condition[0] : openMeteoCurrent)
+
+  // The latest reading, shared with other local tools (Prometheus reads it
+  // when a focus session ends): ~/.local/state/omarchy/weather-current.json.
+  // Written on every new reading; nothing is fetched for it.
+  FileView {
+    id: currentExport
+    path: Quickshell.env("HOME") + "/.local/state/omarchy/weather-current.json"
+    printErrors: false
+  }
+
+  function exportCurrent() {
+    var c = root.current
+    if (!c || c.temp_C === undefined || c.temp_C === null || c.temp_C === "") return
+    var wmo = c.openMeteoWeatherCode !== undefined && c.openMeteoWeatherCode !== null ? Number(c.openMeteoWeatherCode) : null
+    currentExport.setText(JSON.stringify({
+      at: Date.now(),
+      tempC: Number(c.temp_C),
+      wmoCode: wmo,
+      wttrCode: wmo === null && c.weatherCode !== undefined ? Number(c.weatherCode) : null,
+      isDay: c.isDay !== undefined ? !!c.isDay : null
+    }) + "\n")
+  }
+
+  onCurrentChanged: exportCurrent()
   readonly property var areaInfo: report && report.nearest_area && report.nearest_area[0] ? report.nearest_area[0] : null
   readonly property var forecastDays: buildForecastDays()
   readonly property string reportCountry: areaInfo && areaInfo.country && areaInfo.country[0] ? areaInfo.country[0].value : ""
