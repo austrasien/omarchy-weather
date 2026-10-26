@@ -56,6 +56,22 @@ Panel {
     else root.openFromHotkey()
   }
 
+  // The rain radar lives in the minimap (austraz.minimap): its weather map
+  // shows as a notification, playing the end of the radar loop.
+  function openRadar() {
+    root.close()
+    Quickshell.execDetached(["omarchy-shell", "austraz.minimap", "radar"])
+  }
+
+  // The radar button only shows when the minimap is installed.
+  property bool minimapInstalled: false
+  FileView {
+    path: Quickshell.env("HOME") + "/.config/omarchy/plugins/austraz.minimap/manifest.json"
+    printErrors: false
+    onLoaded: root.minimapInstalled = true
+    onLoadFailed: root.minimapInstalled = false
+  }
+
   function switchPanel(direction) {
     if (root.bar && typeof root.bar.switchPanelFrom === "function")
       return root.bar.switchPanelFrom(root.barIdentity, direction)
@@ -603,30 +619,61 @@ Panel {
 
           Row {
             visible: !root.editingLocation && root.reportLocation !== ""
-            spacing: Style.space(6)
+            spacing: Style.space(12)
 
-            TapHandler {
-              onTapped: root.startEditingLocation()
-            }
-            HoverHandler {
-              cursorShape: Qt.PointingHandCursor
+            Row {
+              spacing: Style.space(6)
+              anchors.verticalCenter: parent.verticalCenter
+
+              TapHandler {
+                onTapped: root.startEditingLocation()
+              }
+              HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+              }
+
+              Text {
+                text: ""  // nf-fa-map_marker
+                color: Qt.darker(root.bar.foreground, 1.4)
+                font.family: root.bar.fontFamily
+                font.pixelSize: Style.font.body
+                anchors.verticalCenter: parent.verticalCenter
+              }
+              Text {
+                textFormat: Text.PlainText
+                text: (root.reportLocation || "").toUpperCase()
+                color: Qt.darker(root.bar.foreground, 1.4)
+                font.family: root.bar.fontFamily
+                font.pixelSize: Style.font.body
+                font.letterSpacing: 1
+                anchors.verticalCenter: parent.verticalCenter
+              }
             }
 
-            Text {
-              text: ""  // nf-fa-map_marker
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
-              font.pixelSize: Style.font.body
+            Rectangle {
+              visible: root.minimapInstalled
+              width: Style.space(22)
+              height: Style.space(22)
               anchors.verticalCenter: parent.verticalCenter
-            }
-            Text {
-              textFormat: Text.PlainText
-              text: (root.reportLocation || "").toUpperCase()
-              color: Qt.darker(root.bar.foreground, 1.4)
-              font.family: root.bar.fontFamily
-              font.pixelSize: Style.font.body
-              font.letterSpacing: 1
-              anchors.verticalCenter: parent.verticalCenter
+              radius: Math.min(4, Style.cornerRadius)
+              color: radarArea.containsMouse ? Style.hoverFillFor(root.bar.foreground, Color.accent) : "transparent"
+
+              Text {
+                textFormat: Text.PlainText
+                anchors.centerIn: parent
+                text: "󰐷"  // nf-md-radar
+                font.family: root.bar.fontFamily
+                color: Qt.darker(root.bar.foreground, 1.4)
+                font.pixelSize: Style.font.body
+              }
+
+              MouseArea {
+                id: radarArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.openRadar()
+              }
             }
           }
 
